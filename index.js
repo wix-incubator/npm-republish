@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 const { directory } = require('tempy');
 const { execSync, spawnSync } = require('child_process');
 const { extract } = require('tar');
