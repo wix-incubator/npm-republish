@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+
 
 const { directory } = require('tempy');
 const { execSync, spawnSync } = require('child_process');
@@ -28,6 +28,6 @@ async function republishPackage(originPackageIdentifier, targetVersion, publishA
     });
 }
 
-republishPackage(process.argv[2], process.argv[3], process.argv.slice(4));
-
-
+module.exports = {
+    republishPackage
+}

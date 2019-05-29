@@ -23,7 +23,7 @@ test("should republish an existing package using the preconfigured npm registry"
 
     const { stdout } = spawnSync(
         "sh",
-        ["-c", "node ./index.js check-package@1.0.0 1.1.0"],
+        ["-c", "node ./bin/npm-republish.js check-package@1.0.0 1.1.0"],
         {
             env: {
                 ...process.env,
@@ -53,7 +53,7 @@ test("should republish an existing package and pass publish args", async () => {
 
     const { stdout } = spawnSync(
         "sh",
-        ["-c", "node ./index.js check-package@1.0.0 1.1.0 --tag my-tag"],
+        ["-c", "node ./bin/npm-republish.js check-package@1.0.0 1.1.0 --tag my-tag"],
         {
             env: {
                 ...process.env,
