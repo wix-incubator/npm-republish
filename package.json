@@ -1,6 +1,6 @@
 {
   "name": "@wix/npm-republish",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Republish an existing npm package as a different version",
   "main": "index.js",
   "repository": "git@github.com:wix-incubator/npm-republish.git",
