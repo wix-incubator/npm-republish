@@ -1,5 +1,4 @@
 const { spawnSync, spawn, execSync } = require("child_process");
-const { directory } = require("tempy");
 const { writeFileSync } = require("fs");
 const { join } = require("path");
 
@@ -81,7 +80,9 @@ test("should republish an existing package and pass publish args", async () => {
 });
 
 function publishCheckPackage() {
-    const tempDir = directory();
+    const tempDir = "./tmp";
+
+    execSync(`mkdir -p ${tempDir}`);
 
     writeFileSync(
         join(tempDir, "package.json"),
@@ -94,4 +95,6 @@ function publishCheckPackage() {
     spawnSync("npm", ["publish", "--registry", "http://localhost:4873"], {
         cwd: tempDir
     });
+
+    execSync(`rm -rf ${tempDir}`);
 }

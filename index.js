@@ -1,13 +1,20 @@
-
-
-const { directory } = require('tempy');
 const { execSync, spawnSync } = require('child_process');
 const { extract } = require('tar');
-const { readFileSync, writeFileSync } = require('fs');
+const { readFileSync, writeFileSync, mkdirSync } = require('fs');
 const { join } = require('path');
+const uniqueString = require('unique-string');
+const tempDir = require('temp-dir');
+
+const getPath = () => join(tempDir, uniqueString());
+
+function tempDirectory() {
+    const directory = getPath();
+	mkdirSync(directory);
+	return directory;
+}
 
 function republishPackage(originPackageIdentifier, targetVersion, publishArgs) {
-    const tempDir = directory();
+    const tempDir = tempDirectory();
 
     return Promise.resolve()
         .then(() => {
