@@ -1,13 +1,13 @@
 {
   "name": "@wix/npm-republish",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Republish an existing npm package as a different version",
   "main": "index.js",
   "repository": "git@github.com:wix-incubator/npm-republish.git",
   "author": "Netanel Gilad <netanelg@wix.com>",
   "license": "MIT",
   "bin": {
-    "npm-republish": "./index.js"
+    "npm-republish": "./bin/npm-republish.js"
   },
   "dependencies": {
     "tar": "^4.4.8",
