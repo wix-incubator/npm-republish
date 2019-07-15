@@ -79,7 +79,42 @@ test("should republish an existing package and pass publish args", async () => {
     `);
 });
 
-function publishCheckPackage() {
+test("should ignore scripts when publishing the package", async () => {
+    publishCheckPackage({
+        scripts: {
+            prepublishOnly: 'exit 1'
+        }
+    });
+
+    const { stdout } = spawnSync(
+        "sh",
+        ["-c", "node ./bin/npm-republish.js check-package@1.0.0 1.1.0"],
+        {
+            env: {
+                ...process.env,
+                NPM_CONFIG_REGISTRY: "http://localhost:4873"
+            }
+        }
+    );
+
+    const { stdout: packageDefBuffer } = spawnSync("npm", [
+        "view",
+        "check-package",
+        "--registry",
+        "http://localhost:4873",
+        "-json"
+    ]);
+
+    const packageDef = JSON.parse(packageDefBuffer.toString());
+
+    expect(packageDef.versions).toContain("1.1.0");
+    expect(stdout.toString()).toMatchInlineSnapshot(`
+      "+ check-package@1.1.0
+      "
+    `);
+})
+
+function publishCheckPackage(extendPackageJSON) {
     const tempDir = "./tmp";
 
     execSync(`mkdir -p ${tempDir}`);
@@ -88,12 +123,14 @@ function publishCheckPackage() {
         join(tempDir, "package.json"),
         JSON.stringify({
             name: "check-package",
-            version: "1.0.0"
+            version: "1.0.0",
+            ...extendPackageJSON
         })
     );
 
-    spawnSync("npm", ["publish", "--registry", "http://localhost:4873"], {
-        cwd: tempDir
+    execSync("npm publish --ignore-scripts --registry http://localhost:4873", {
+        cwd: tempDir,
+        stdio: 'ignore'
     });
 
     execSync(`rm -rf ${tempDir}`);

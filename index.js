@@ -32,7 +32,7 @@ function republishPackage(originPackageIdentifier, targetVersion, publishArgs) {
             packageJson.version = targetVersion;
             writeFileSync(join(tempDir, 'package/package.json'), JSON.stringify(packageJson));
 
-            spawnSync('npm', ['publish', ...publishArgs], {
+            spawnSync('npm', ['publish', '--ignore-scripts', ...publishArgs], {
                 cwd: join(tempDir, 'package'),
                 stdio: 'inherit'
             });
