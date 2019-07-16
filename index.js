@@ -1,4 +1,4 @@
-const { execSync, spawnSync } = require('child_process');
+const { execSync } = require('child_process');
 const { extract } = require('tar');
 const { readFileSync, writeFileSync, mkdirSync } = require('fs');
 const { join } = require('path');
@@ -32,7 +32,7 @@ function republishPackage(originPackageIdentifier, targetVersion, publishArgs) {
             packageJson.version = targetVersion;
             writeFileSync(join(tempDir, 'package/package.json'), JSON.stringify(packageJson));
 
-            spawnSync('npm', ['publish', '--ignore-scripts', ...publishArgs], {
+            execSync(`npm publish --ignore-scripts ${publishArgs.join(' ')}`, {
                 cwd: join(tempDir, 'package'),
                 stdio: 'inherit'
             });
