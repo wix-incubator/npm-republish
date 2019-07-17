@@ -9,16 +9,23 @@ const getPath = () => join(tempDir, uniqueString());
 
 function tempDirectory() {
     const directory = getPath();
-	mkdirSync(directory);
-	return directory;
+    mkdirSync(directory);
+    return directory;
 }
 
-function republishPackage(originPackageIdentifier, targetVersion, publishArgs) {
+/**
+ * 
+ * @param {string} originPackageIdentifier The full identifier of the package (name and version)
+ * @param {string} targetVersion The version to re-publish to
+ * @param {string[]} publishArgs Any additional arguments to pass to npm publish
+ * @param {string=} registry The registry to publish to/from
+ */
+function republishPackage(originPackageIdentifier, targetVersion, publishArgs, registry) {
     const tempDir = tempDirectory();
 
     return Promise.resolve()
         .then(() => {
-            const tarFile = execSync(`npm pack ${originPackageIdentifier}`, {
+            const tarFile = execSync(`npm pack ${originPackageIdentifier} ${registry ? `--registry=${registry}` : ''}`, {
                 cwd: tempDir
             });
 
