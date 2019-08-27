@@ -43,7 +43,7 @@ function republishPackage(originPackageIdentifier, targetVersion, publishArgs, r
             writeFileSync(join(tempDir, 'package/package.json'), JSON.stringify(packageJson));
             console.log(`Wrote the target version ${targetVersion} to the package.json`);
 
-            execSync(`npm publish --ignore-scripts ${publishArgs.join(' ')}`, {
+            execSync(`npm publish --ddd --ignore-scripts ${publishArgs.join(' ')}`, {
                 cwd: join(tempDir, 'package'),
                 stdio: 'inherit'
             });
