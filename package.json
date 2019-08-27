@@ -23,7 +23,5 @@
     "verdaccio": "^3.11.7",
     "wait-port": "^0.2.2"
   },
-  "publishConfig": {
-    "access": "public"
-  }
+  "publishConfig": {}
 }
