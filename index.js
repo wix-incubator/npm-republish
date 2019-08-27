@@ -38,6 +38,8 @@ function republishPackage(originPackageIdentifier, targetVersion, publishArgs, r
             console.log('Finished downloading and extracting the origin package.');
             const packageJson = JSON.parse(readFileSync(join(tempDir, 'package/package.json'), 'utf8'));
             packageJson.version = targetVersion;
+            packageJson.uniqeBuildIdentifier = uniqueString();
+            console.log('Unique identifier for this publish', packageJson.uniqeBuildIdentifier);
             writeFileSync(join(tempDir, 'package/package.json'), JSON.stringify(packageJson));
             console.log(`Wrote the target version ${targetVersion} to the package.json`);
 
