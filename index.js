@@ -35,14 +35,18 @@ function republishPackage(originPackageIdentifier, targetVersion, publishArgs, r
             });
         })
         .then(() => {
+            console.log('Finished downloading and extracting the origin package.');
             const packageJson = JSON.parse(readFileSync(join(tempDir, 'package/package.json'), 'utf8'));
             packageJson.version = targetVersion;
             writeFileSync(join(tempDir, 'package/package.json'), JSON.stringify(packageJson));
+            console.log(`Wrote the target version ${targetVersion} to the package.json`);
 
             execSync(`npm publish --ignore-scripts ${publishArgs.join(' ')}`, {
                 cwd: join(tempDir, 'package'),
                 stdio: 'inherit'
             });
+
+            console.log('Publish to target version succeeded.');
         });
 }
 
