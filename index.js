@@ -61,29 +61,35 @@ function republishPackage(originPackageIdentifier, targetVersion, publishArgs, r
             writeFileSync(join(tempDir, 'package/package.json'), JSON.stringify(packageJson));
             console.log(`Wrote the target version ${targetVersion} to the package.json`);
 
-            const subProcess = exec(`npm publish --ddd --ignore-scripts ${publishArgs.join(' ')}`, {
-                cwd: join(tempDir, 'package'),
-            }, (error, stdout, stderr) => {
-                if (error) {
-                    if (stringHasForbiddenCantPublishBecauseVersionExists(stdout) ||
-                        stringHasForbiddenCantPublishBecauseVersionExists(stderr)) {
-                        const versionInfo = getPackageVersionInfo(registry, packageJson.name, targetVersion);
-                        if (versionInfo.uniqePublishIdentifier !== packageJson.uniqePublishIdentifier) {
-                            console.error(error);
-                            process.exit(error.code);
+            return new Promise((resolve, reject) => {
+                const subProcess = exec(`npm publish --ddd --ignore-scripts ${publishArgs.join(' ')}`, {
+                    cwd: join(tempDir, 'package'),
+                }, (error, stdout, stderr) => {
+                    if (error) {
+                        if (stringHasForbiddenCantPublishBecauseVersionExists(stdout) ||
+                            stringHasForbiddenCantPublishBecauseVersionExists(stderr)) {
+                            const versionInfo = getPackageVersionInfo(registry, packageJson.name, targetVersion);
+                            if (versionInfo.uniqePublishIdentifier !== packageJson.uniqePublishIdentifier) {
+                                reject(error);
+                            }
+                            else {
+                                console.log('Publish to target version succeeded.');
+                                resolve();
+                            }
+                        }
+                        else {
+                            reject(error);
                         }
                     }
                     else {
-                        console.error(error);
-                        process.exit(error.code);
+                        console.log('Publish to target version succeeded.');
+                        resolve();
                     }
-                }
+                });
+    
+                subProcess.stderr.pipe(process.stderr);
+                subProcess.stdout.pipe(process.stdout);
             });
-
-            subProcess.stderr.pipe(process.stderr);
-            subProcess.stdout.pipe(process.stdout);
-
-            console.log('Publish to target version succeeded.');
         });
 }
 
