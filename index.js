@@ -5,6 +5,8 @@ const { join } = require('path');
 const uniqueString = require('unique-string');
 const tempDir = require('temp-dir');
 
+const TEN_MEGABYTES = 10 * 1024 * 1024;
+
 const getPath = () => join(tempDir, uniqueString());
 
 function tempDirectory() {
@@ -64,6 +66,7 @@ function republishPackage(originPackageIdentifier, targetVersion, publishArgs, r
             return new Promise((resolve, reject) => {
                 const subProcess = exec(`npm publish --ddd --ignore-scripts ${publishArgs.join(' ')}`, {
                     cwd: join(tempDir, 'package'),
+                    maxBuffer: TEN_MEGABYTES,
                 }, (error, stdout, stderr) => {
                     if (error) {
                         if (stringHasForbiddenCantPublishBecauseVersionExists(stdout) ||
