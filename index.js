@@ -36,14 +36,21 @@ function getPackageVersionInfo(registry, packageName, version) {
  * @param {string} originPackageIdentifier The full identifier of the package (name and version)
  * @param {string} targetVersion The version to re-publish to
  * @param {string[]} publishArgs Any additional arguments to pass to npm publish
- * @param {string=} registry The registry to publish to/from
+ * @param {string|{from:string, to:string}=} registry The registry to publish to/from
  */
 function republishPackage(originPackageIdentifier, targetVersion, publishArgs, registry) {
+    if (typeof registry === "string") {
+        registry = {
+            from: registry,
+            to: registry
+        }
+    }
+
     const tempDir = tempDirectory();
 
     return Promise.resolve()
         .then(() => {
-            const tarFile = execSync(`npm pack ${originPackageIdentifier} ${registry ? `--registry=${registry}` : ''}`, {
+            const tarFile = execSync(`npm pack ${originPackageIdentifier} ${registry ? `--registry=${registry.from}` : ''}`, {
                 cwd: tempDir
             });
 
@@ -58,6 +65,10 @@ function republishPackage(originPackageIdentifier, targetVersion, publishArgs, r
             console.log('Finished downloading and extracting the origin package.');
             const packageJson = JSON.parse(readFileSync(join(tempDir, 'package/package.json'), 'utf8'));
             packageJson.version = targetVersion;
+            if (registry) {
+                packageJson.publishConfig = packageJson.publishConfig || {};
+                packageJson.publishConfig.registry = registry.to;
+            }
             packageJson.uniqePublishIdentifier = uniqueString();
             console.log('Unique identifier for this publish', packageJson.uniqePublishIdentifier);
             writeFileSync(join(tempDir, 'package/package.json'), JSON.stringify(packageJson));
@@ -71,7 +82,7 @@ function republishPackage(originPackageIdentifier, targetVersion, publishArgs, r
                     if (error) {
                         if (stringHasForbiddenCantPublishBecauseVersionExists(stdout) ||
                             stringHasForbiddenCantPublishBecauseVersionExists(stderr)) {
-                            const versionInfo = getPackageVersionInfo(registry, packageJson.name, targetVersion);
+                            const versionInfo = getPackageVersionInfo(registry.to, packageJson.name, targetVersion);
                             if (versionInfo.uniqePublishIdentifier !== packageJson.uniqePublishIdentifier) {
                                 reject(error);
                             }
