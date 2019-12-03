@@ -12,7 +12,7 @@ const { republishPackage } = require('@wix/npm-republish');
 })();
 ```
 
-You can even republish ona different package name:
+You can even republish on a different package name:
 
 ```javascript 1.8
 const { republishPackage } = require('@wix/npm-republish');
