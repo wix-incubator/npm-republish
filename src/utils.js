@@ -12,7 +12,8 @@ async function downloadPackage({ registry, packageName, packageVersion }) {
     cwd: downloadDirPath,
   })
 
-  const tgzPath = path.join(downloadDirPath, `${packageName}-${packageVersion}.tgz`)
+  const tgzFileName = `${packageName.replace('@', '').replace('/', '-')}-${packageVersion}.tgz`
+  const tgzPath = path.join(downloadDirPath, tgzFileName)
   await extract({ file: tgzPath, cwd: downloadDirPath })
 
   console.log('Finished downloading and extracting the origin package.')
@@ -38,7 +39,38 @@ function getPackageVersionInfo(registry, packageName, version) {
   )
 }
 
+function destructPackageNameWithVersion(packageNameWithVersion) {
+  const invalidArgument = new Error(
+    `invalid argument: ${packageNameWithVersion}. it must be from the form <package-name>@<version>. scope is optional.`,
+  )
+  if (!packageNameWithVersion) {
+    throw invalidArgument
+  }
+  if (packageNameWithVersion.includes('/')) {
+    const parts = packageNameWithVersion.split('@')
+    if (parts.length < 3) {
+      throw invalidArgument
+    } else {
+      return {
+        packageName: `@${parts[1]}`,
+        packageVersion: parts[2],
+      }
+    }
+  } else {
+    const parts = packageNameWithVersion.split('@')
+    if (parts.length < 2) {
+      throw invalidArgument
+    } else {
+      return {
+        packageName: parts[0],
+        packageVersion: parts[1],
+      }
+    }
+  }
+}
+
 module.exports = {
+  destructPackageNameWithVersion,
   downloadPackage,
   TEN_MEGABYTES,
   stringHasForbiddenCantPublishBecauseVersionExists,

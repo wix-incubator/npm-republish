@@ -52,7 +52,7 @@ const loginToRegistryIfNeeded = () => {
   }
 }
 
-async function publishCheckPackage(extendPackageJSON) {
+async function publishCheckPackage(extendPackageJSON = {}) {
   const tempDir = './tmp'
 
   await execa('mkdir', `-p ${tempDir}`.split(' '))
@@ -61,14 +61,7 @@ async function publishCheckPackage(extendPackageJSON) {
     loginToRegistryIfNeeded()
   }
 
-  writeFileSync(
-    join(tempDir, 'package.json'),
-    JSON.stringify({
-      name: 'check-package',
-      version: '1.0.0',
-      ...extendPackageJSON,
-    }),
-  )
+  writeFileSync(join(tempDir, 'package.json'), JSON.stringify(extendPackageJSON))
 
   await execa('npm', 'publish --ignore-scripts --registry http://localhost:4873'.split(' '), {
     cwd: tempDir,

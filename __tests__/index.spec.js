@@ -4,10 +4,57 @@ const { setup, publishCheckPackage, calculateMd5, registry } = require('./test-u
 
 setup()
 
-test('should republish products from one package to different package under different name and different version', async () => {
-  await publishCheckPackage()
+test('should republish products from one package to different package under different name with scope and different version', async () => {
+  const originPackageName = '@super-scope/check-package'
+  const originPackageVersion = '1.0.0'
+  await publishCheckPackage({
+    name: originPackageName,
+    version: originPackageVersion,
+  })
 
-  await republishPackage('check-package@1.0.0', 'target-package-name@1.1.0', [], registry)
+  await republishPackage(
+    `${originPackageName}@${originPackageVersion}`,
+    '@my-scope/target-package-name@1.1.0',
+    [],
+    registry,
+  )
+
+  const { stdout: packageDef } = await execa('npm', [
+    'view',
+    '@my-scope/target-package-name',
+    '--registry',
+    registry,
+    '-json',
+    'versions',
+  ])
+
+  expect(JSON.parse(packageDef.toString())).toContain('1.1.0')
+
+  const fromMd5 = await calculateMd5({
+    packageName: originPackageName,
+    packageVersion: originPackageVersion,
+    registry,
+    withoutProps: ['name', 'version'],
+  })
+  const toMd5 = await calculateMd5({
+    packageName: '@my-scope/target-package-name',
+    packageVersion: '1.1.0',
+    registry,
+    withoutProps: ['name', 'version', 'publishConfig', 'uniqePublishIdentifier'],
+  })
+
+  expect(fromMd5).toEqual(toMd5)
+})
+
+test('should republish products from one package to different package under different name and different version', async () => {
+  const originPackageName = 'check-package'
+  const originPackageVersion = '1.0.0'
+  await publishCheckPackage({
+    name: originPackageName,
+    version: originPackageVersion,
+  })
+
+  await republishPackage(`${originPackageName}@${originPackageVersion}`, 'target-package-name@1.1.0', [], registry)
 
   const { stdout: packageDef } = await execa('npm', [
     'view',
@@ -21,8 +68,8 @@ test('should republish products from one package to different package under diff
   expect(JSON.parse(packageDef.toString())).toContain('1.1.0')
 
   const fromMd5 = await calculateMd5({
-    packageName: 'check-package',
-    packageVersion: '1.0.0',
+    packageName: originPackageName,
+    packageVersion: originPackageVersion,
     registry,
     withoutProps: ['name', 'version'],
   })
@@ -37,9 +84,14 @@ test('should republish products from one package to different package under diff
 })
 
 test('should republish an existing package using the preconfigured npm registry', async () => {
-  await publishCheckPackage()
+  const originPackageName = 'check-package'
+  const originPackageVersion = '1.0.0'
+  await publishCheckPackage({
+    name: originPackageName,
+    version: originPackageVersion,
+  })
 
-  await republishPackage('check-package@1.0.0', 'check-package@1.1.0', [], registry)
+  await republishPackage(`${originPackageName}@${originPackageVersion}`, 'check-package@1.1.0', [], registry)
 
   const { stdout: packageDef } = await execa('npm', [
     'view',
@@ -53,8 +105,8 @@ test('should republish an existing package using the preconfigured npm registry'
   expect(JSON.parse(packageDef.toString())).toContain('1.1.0')
 
   const fromMd5 = await calculateMd5({
-    packageName: 'check-package',
-    packageVersion: '1.0.0',
+    packageName: originPackageName,
+    packageVersion: originPackageVersion,
     registry,
     withoutProps: ['name', 'version', 'publishConfig', 'uniqePublishIdentifier'],
   })
@@ -69,9 +121,19 @@ test('should republish an existing package using the preconfigured npm registry'
 })
 
 test('should republish an existing package and pass publish args', async () => {
-  await publishCheckPackage()
+  const originPackageName = 'check-package'
+  const originPackageVersion = '1.0.0'
+  await publishCheckPackage({
+    name: originPackageName,
+    version: originPackageVersion,
+  })
 
-  await republishPackage('check-package@1.0.0', 'check-package@1.1.0', '--tag my-tag'.split(' '), registry)
+  await republishPackage(
+    `${originPackageName}@${originPackageVersion}`,
+    'check-package@1.1.0',
+    '--tag my-tag'.split(' '),
+    registry,
+  )
 
   const { stdout: packageDefBuffer } = await execa('npm', ['view', 'check-package', '--registry', registry, '-json'])
 
@@ -81,8 +143,8 @@ test('should republish an existing package and pass publish args', async () => {
   expect(packageDef['dist-tags']['my-tag']).toEqual('1.1.0')
 
   const fromMd5 = await calculateMd5({
-    packageName: 'check-package',
-    packageVersion: '1.0.0',
+    packageName: originPackageName,
+    packageVersion: originPackageVersion,
     registry,
     withoutProps: ['name', 'version', 'publishConfig', 'uniqePublishIdentifier'],
   })
@@ -97,13 +159,17 @@ test('should republish an existing package and pass publish args', async () => {
 })
 
 test('should ignore scripts when publishing the package', async () => {
+  const originPackageName = 'check-package'
+  const originPackageVersion = '1.0.0'
   await publishCheckPackage({
+    name: originPackageName,
+    version: originPackageVersion,
     scripts: {
       prepublishOnly: 'exit 1',
     },
   })
 
-  await republishPackage('check-package@1.0.0', 'check-package@1.1.0', [], registry)
+  await republishPackage(`${originPackageName}@${originPackageVersion}`, 'check-package@1.1.0', [], registry)
 
   const { stdout: packageDefBuffer } = await execa('npm', ['view', 'check-package', '--registry', registry, '-json'])
 
@@ -112,8 +178,8 @@ test('should ignore scripts when publishing the package', async () => {
   expect(packageDef.versions).toContain('1.1.0')
 
   const fromMd5 = await calculateMd5({
-    packageName: 'check-package',
-    packageVersion: '1.0.0',
+    packageName: originPackageName,
+    packageVersion: originPackageVersion,
     registry,
     withoutProps: ['name', 'version', 'publishConfig', 'uniqePublishIdentifier'],
   })

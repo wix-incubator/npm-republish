@@ -7,6 +7,7 @@ const {
   downloadPackage,
   stringHasForbiddenCantPublishBecauseVersionExists,
   getPackageVersionInfo,
+  destructPackageNameWithVersion,
 } = require('./utils')
 
 /**
@@ -24,8 +25,12 @@ async function republishPackage(originPackageIdentifier, target, publishArgs = [
     }
   }
 
-  const [originPackageName, originPackageVersion] = originPackageIdentifier.split('@')
-  const [targetPackageName, targetPackageVersion] = target.includes('@') ? target.split('@') : [false, target]
+  const { packageName: originPackageName, packageVersion: originPackageVersion } = destructPackageNameWithVersion(
+    originPackageIdentifier,
+  )
+  const { packageName: targetPackageName, packageVersion: targetPackageVersion } = destructPackageNameWithVersion(
+    target,
+  )
 
   const { dirPath, cleanUp } = await downloadPackage({
     ...(registry && { registry: registry.from }),
