@@ -2,9 +2,11 @@ const { exec } = require('child_process')
 const { readFileSync, writeFileSync, mkdirSync } = require('fs')
 const { join } = require('path')
 const uniqueString = require('unique-string')
+const isPlainObject = require('is-plain-object');
 const {
   TEN_MEGABYTES,
   downloadPackage,
+  unpublishPackage,
   stringHasForbiddenCantPublishBecauseVersionExists,
   getPackageVersionInfo,
   destructPackageNameWithVersion,
@@ -12,12 +14,19 @@ const {
 
 /**
  *
- * @param {string} originPackageIdentifier The full identifier of the package (name and version)
- * @param {string} targetVersion The version to re-publish to
- * @param {string[]} publishArgs Any additional arguments to pass to npm publish
- * @param {string|{from:string, to:string}=} registry The registry to publish to/from
+ * @param {string} identifier The full identifier of the package (name and version)
+ * @param {string} target The version to re-publish to
+ * @param {{registry: string, publishArgs: string[], shouldUnpublish: boolean}|string[]} publishArgs Publishing coonfiguration.
+ * @param {string|{from:string, to:string}=} registry (DEPRECATED. Use 3-rd agrument as an options) The registry to publish to/from
+ * @param {boolean} shouldUnpublish (DEPRECATED. Use 3-rd agrument as an options) Unpublish origin package after republishing
  */
-async function republishPackage(originPackageIdentifier, target, publishArgs = [], registry) {
+async function republishPackage(identifier, target, publishArgs = [], registry, shouldUnpublish) {
+  if (isPlainObject(publishArgs) && arguments.length === 3) {
+    const options = publishArgs;
+    publishArgs = options.publishArgs || [];
+    registry = options.registry;
+    shouldUnpublish = options.shouldUnpublish;
+  }
   if (typeof registry === 'string') {
     registry = {
       from: registry,
@@ -26,7 +35,7 @@ async function republishPackage(originPackageIdentifier, target, publishArgs = [
   }
 
   const { packageName: originPackageName, packageVersion: originPackageVersion } = destructPackageNameWithVersion(
-    originPackageIdentifier,
+    identifier,
   )
   const { packageName: targetPackageName, packageVersion: targetPackageVersion } = destructPackageNameWithVersion(
     target,
@@ -84,7 +93,11 @@ async function republishPackage(originPackageIdentifier, target, publishArgs = [
 
     subProcess.stderr.pipe(process.stderr)
     subProcess.stdout.pipe(process.stdout)
-  }).then(cleanUp)
+  }).then(cleanUp).then(() => {
+    if (shouldUnpublish) {
+      unpublishPackage(registry.to, originPackageName, originPackageVersion);
+    }
+  })
 }
 
 module.exports = {

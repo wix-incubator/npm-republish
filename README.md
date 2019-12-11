@@ -6,9 +6,15 @@ Republish npm package with a new version:
 const { republishPackage } = require('@wix/npm-republish')
 
 ;(async () => {
-  const args = 'args to add to the npm publish command' // optional
-  const registryUrl = 'http://localhost:4873' // optional
-  await republishPackage('package-name@1.0.0', '1.1.0', args.split(' '), registryUrl)
+  await republishPackage(
+    'package-name@1.0.0',
+    '1.1.0',
+    {
+      publishArgs: 'args to add to the npm publish command'.split(' '), // optional
+      registry: 'http://localhost:4873', // optional
+      shouldUnpublish: false, // optional
+    }
+  );
 })()
 ```
 
@@ -22,6 +28,15 @@ const { republishPackage } = require('@wix/npm-republish')
 })()
 ```
 
-- the first param must have package-name and package-version. package-scope is optional.
-- second param must have package-version. package-name and package-scope are optional.
-- The source code is not transpiled. Min node version: 8 (async support is required)
+
+#### Arguments:
+
+- **identifier** (string) - The full identifier of the package (name and version)
+- **target** (string) - The version or new identifier to re-publish to
+- **options** (Object, *optional*)
+  - **publishArgs** (string[]) - Set of arguments to be included in publishing command. 
+  - **registry** (string|{from: string, to: string}) - The registry to publish to/from.
+  - **shouldUnpublish** - Unpublish origin package after republishing.
+
+Note:
+>The source code is not transpiled. Min node version: 8 (async support is required)
