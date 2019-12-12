@@ -16,17 +16,9 @@ const {
  *
  * @param {string} identifier The full identifier of the package (name and version)
  * @param {string} target The version to re-publish to
- * @param {{registry: string, publishArgs: string[], shouldUnpublish: boolean}|string[]} publishArgs Publishing coonfiguration.
- * @param {string|{from:string, to:string}=} registry (DEPRECATED. Use 3-rd agrument as an options) The registry to publish to/from
- * @param {boolean} shouldUnpublish (DEPRECATED. Use 3-rd agrument as an options) Unpublish origin package after republishing
+ * @param {{registry: string|{from:string, to:string}, publishArgs: string[], shouldUnpublish: boolean}|string[]} publishArgs Publishing coonfiguration.
  */
-async function republishPackage(identifier, target, publishArgs = [], registry, shouldUnpublish) {
-  if (isPlainObject(publishArgs) && arguments.length === 3) {
-    const options = publishArgs;
-    publishArgs = options.publishArgs || [];
-    registry = options.registry;
-    shouldUnpublish = options.shouldUnpublish;
-  }
+async function republishPackage(identifier, target, { publishArgs = [], registry, shouldUnpublish } = {}) {
   if (typeof registry === 'string') {
     registry = {
       from: registry,
