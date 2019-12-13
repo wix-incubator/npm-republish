@@ -60,13 +60,13 @@ async function republishPackage(identifier, target, { publishArgs = [], registry
         cwd: dirPath,
         maxBuffer: TEN_MEGABYTES,
       },
-      (error, stdout, stderr) => {
+      async (error, stdout, stderr) => {
         if (error) {
           if (
             stringHasForbiddenCantPublishBecauseVersionExists(stdout) ||
             stringHasForbiddenCantPublishBecauseVersionExists(stderr)
           ) {
-            const versionInfo = getPackageVersionInfo(registry.to, packageJson.name, targetVersion)
+            const versionInfo = await getPackageVersionInfo(registry.to, packageJson.name, targetVersion)
             if (versionInfo.uniqePublishIdentifier !== packageJson.uniqePublishIdentifier) {
               reject(error)
             } else {
