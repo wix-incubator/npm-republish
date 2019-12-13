@@ -87,7 +87,11 @@ async function republishPackage(identifier, target, { publishArgs = [], registry
     subProcess.stdout.pipe(process.stdout)
   }).then(cleanUp).then(() => {
     if (shouldUnpublish) {
-      return unpublishPackage(registry.to, originPackageName, originPackageVersion);
+      try {
+        return unpublishPackage(registry.to, originPackageName, originPackageVersion);
+      } catch (e) {
+        console.error("Can't unpublish a package: ", e);
+      }
     }
   })
 }

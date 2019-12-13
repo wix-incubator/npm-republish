@@ -41,13 +41,8 @@ async function getPackageVersionInfo(registry, packageName, version) {
 }
 
 async function unpublishPackage(registry, packageName, version) {
-  console.log(`unpublish --registry=${registry} ${packageName}@${version}`);
-  try {
-    const npmPackParams = `unpublish --registry=${registry} ${packageName}@${version}`;
-    return execa('npm', npmPackParams.split(' '));
-  } catch (e) {
-    console.warn(e);
-  }
+  const npmPackParams = `unpublish --registry=${registry} ${packageName}@${version}`;
+  return execa('npm', npmPackParams.split(' '));
 }
 
 function destructPackageNameWithVersion(packageNameWithVersion) {
