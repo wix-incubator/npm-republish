@@ -33,10 +33,16 @@ function stringHasForbiddenCantPublishBecauseVersionExists(str) {
   )
 }
 
-function getPackageVersionInfo(registry, packageName, version) {
+async function getPackageVersionInfo(registry, packageName, version) {
+  const npmPackParams = `show --json --registry=${registry} ${packageName}@${version}`;
   return JSON.parse(
-    execSync(`npm show --json --registry=${registry} ${packageName}@${version}`, { stdio: 'pipe' }).toString(),
+    await execa('npm', npmPackParams.split(' ')),
   )
+}
+
+async function unpublishPackage(registry, packageName, version) {
+  const npmPackParams = `unpublish --registry=${registry} ${packageName}@${version}`;
+  return execa('npm', npmPackParams.split(' '));
 }
 
 function destructPackageNameWithVersion(packageNameWithVersion) {
@@ -73,6 +79,7 @@ module.exports = {
   destructPackageNameWithVersion,
   downloadPackage,
   TEN_MEGABYTES,
+  unpublishPackage,
   stringHasForbiddenCantPublishBecauseVersionExists,
   getPackageVersionInfo,
 }
