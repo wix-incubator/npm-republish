@@ -6,9 +6,6 @@
   "repository": "git@github.com:wix-incubator/npm-republish.git",
   "author": "Netanel Gilad <netanelg@wix.com>",
   "license": "MIT",
-  "bin": {
-    "npm-republish": "./bin/npm-republish.js"
-  },
   "dependencies": {
     "execa": "^3.4.0",
     "fs-extra": "^8.1.0",
