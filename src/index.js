@@ -1,8 +1,7 @@
 const { exec } = require('child_process')
-const { readFileSync, writeFileSync, mkdirSync } = require('fs')
+const { readFileSync, writeFileSync } = require('fs')
 const { join } = require('path')
 const uniqueString = require('unique-string')
-const isPlainObject = require('is-plain-object');
 const {
   TEN_MEGABYTES,
   downloadPackage,

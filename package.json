@@ -9,7 +9,6 @@
   "dependencies": {
     "execa": "^3.4.0",
     "fs-extra": "^8.1.0",
-    "is-plain-object": "^3.0.0",
     "tar": "^4.4.8",
     "tempy": "^0.3.0",
     "unique-string": "^2.0.0"
