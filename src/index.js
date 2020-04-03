@@ -10,6 +10,7 @@ const {
   getPackageVersionInfo,
   destructPackageNameWithVersion,
 } = require('./utils')
+const execa = require('execa')
 
 /**
  *
@@ -51,6 +52,11 @@ async function republishPackage(identifier, target, { publishArgs = [], registry
   console.log('Unique identifier for this publish', packageJson.uniqePublishIdentifier)
   writeFileSync(join(dirPath, 'package.json'), JSON.stringify(packageJson))
   console.log(`Wrote the target version ${targetPackageVersion} to the package.json`)
+
+  await execa('npm', ['run', 'prerepublish', '--if-present'], {
+    cwd: dirPath,
+    stdio: 'inherit'
+  })
 
   return new Promise((resolve, reject) => {
     const subProcess = exec(

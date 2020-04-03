@@ -1,5 +1,6 @@
 const execa = require('execa')
 const { republishPackage } = require('../src')
+const {downloadPackage} = require('../src/utils')
 const { setup, publishCheckPackage, calculateMd5, registry } = require('./test-utils')
 
 setup()
@@ -157,6 +158,39 @@ test('should republish an existing package and pass publish args', async () => {
   })
 
   expect(fromMd5).toEqual(toMd5)
+})
+
+test('should republish an existing package and run prerepublish', async () => {
+  const originPackageName = 'check-package'
+  const originPackageVersion = '1.0.0'
+  await publishCheckPackage({
+    name: originPackageName,
+    version: originPackageVersion,
+    scripts: {
+      prerepublish: `echo Hello World > myFile.txt`
+    }
+  })
+
+  await republishPackage(
+    `${originPackageName}@${originPackageVersion}`,
+    'check-package@1.1.0',
+    {
+      publishArgs: '--tag my-tag'.split(' '),
+      registry
+    },
+  )
+
+  const { stdout: packageDefBuffer } = await execa('npm', ['view', 'check-package', '--registry', registry, '-json'])
+
+  const packageDef = JSON.parse(packageDefBuffer.toString())
+
+  expect(packageDef.versions).toContain('1.1.0')
+  expect(packageDef['dist-tags']['my-tag']).toEqual('1.1.0')
+
+  const { dirPath, cleanUp } = await downloadPackage({ packageVersion: '1.1.0', packageName: originPackageName, registry })
+  expect(() => require('fs').statSync(require('path').join(dirPath, 'myFile.txt'))).not.toThrow()
+
+  await cleanUp();
 })
 
 test('should ignore scripts when publishing the package', async () => {
