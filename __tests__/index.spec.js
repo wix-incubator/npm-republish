@@ -187,10 +187,35 @@ test('should republish an existing package and run prerepublish', async () => {
   expect(packageDef.versions).toContain('1.1.0')
   expect(packageDef['dist-tags']['my-tag']).toEqual('1.1.0')
 
-  const { dirPath, cleanUp } = await downloadPackage({ packageVersion: '1.1.0', packageName: originPackageName, registry })
+  const { dirPath, cleanUp } = await downloadPackage({ packageIdentifier: `${originPackageName}@1.1.0`, registry })
   expect(() => require('fs').statSync(require('path').join(dirPath, 'myFile.txt'))).not.toThrow()
 
   await cleanUp();
+})
+
+test('should republish an existing package from an http url', async () => {
+  const originPackageName = 'check-package'
+  const originPackageVersion = '1.0.0'
+  await publishCheckPackage({
+    name: originPackageName,
+    version: originPackageVersion
+  })
+
+  await republishPackage(
+    `${originPackageName}@${originPackageVersion}`,
+    'check-package@1.1.0',
+    {
+      publishArgs: '--tag my-tag'.split(' '),
+      registry
+    },
+  )
+
+  const { stdout: packageDefBuffer } = await execa('npm', ['view', 'check-package', '--registry', registry, '-json'])
+
+  const packageDef = JSON.parse(packageDefBuffer.toString())
+
+  expect(packageDef.versions).toContain('1.1.0')
+  expect(packageDef['dist-tags']['my-tag']).toEqual('1.1.0')
 })
 
 test('should ignore scripts when publishing the package', async () => {

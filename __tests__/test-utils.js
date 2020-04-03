@@ -71,7 +71,7 @@ async function publishCheckPackage(extendPackageJSON = {}) {
 }
 
 async function calculateMd5({ registry, packageName, packageVersion, withoutProps }) {
-  const { dirPath, cleanUp } = await downloadPackage({ packageVersion, packageName, registry })
+  const { dirPath, cleanUp } = await downloadPackage({ packageIdentifier: `${packageName}@${packageVersion}`, registry })
 
   if (withoutProps.length > 0) {
     const packageJsonPath = path.join(dirPath, 'package.json')
