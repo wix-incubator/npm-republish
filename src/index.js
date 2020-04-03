@@ -9,6 +9,7 @@ const {
   stringHasForbiddenCantPublishBecauseVersionExists,
   getPackageVersionInfo,
   destructPackageNameWithVersion,
+  isURL
 } = require('./utils')
 const execa = require('execa')
 
@@ -26,20 +27,25 @@ async function republishPackage(identifier, target, { publishArgs = [], registry
     }
   }
 
-  const { packageName: originPackageName, packageVersion: originPackageVersion } = destructPackageNameWithVersion(
-    identifier,
-  )
   const { packageName: targetPackageName, packageVersion: targetPackageVersion } = destructPackageNameWithVersion(
     target,
   )
 
-  const { dirPath, cleanUp } = await downloadPackage({
-    ...(registry && { registry: registry.from }),
-    packageName: originPackageName,
-    packageVersion: originPackageVersion,
-  })
+  const isIdentifierAURL = isURL(identifier);
+  let downloadPacakgeResult;
 
-  const packageJson = JSON.parse(readFileSync(join(dirPath, 'package.json'), 'utf8'))
+  if (isIdentifierAURL) {
+    downloadPacakgeResult = await downloadPackage({
+      url: identifier
+    })  
+  } else {
+    downloadPacakgeResult = await downloadPackage({
+      ...(registry && { registry: registry.from }),
+      packageIdentifier: identifier
+    })
+  }
+
+  const packageJson = JSON.parse(readFileSync(join(downloadPacakgeResult.dirPath, 'package.json'), 'utf8'))
   if (targetPackageName) {
     packageJson.name = targetPackageName
   }
@@ -50,11 +56,11 @@ async function republishPackage(identifier, target, { publishArgs = [], registry
   }
   packageJson.uniqePublishIdentifier = uniqueString()
   console.log('Unique identifier for this publish', packageJson.uniqePublishIdentifier)
-  writeFileSync(join(dirPath, 'package.json'), JSON.stringify(packageJson))
+  writeFileSync(join(downloadPacakgeResult.dirPath, 'package.json'), JSON.stringify(packageJson))
   console.log(`Wrote the target version ${targetPackageVersion} to the package.json`)
 
   await execa('npm', ['run', 'prerepublish', '--if-present'], {
-    cwd: dirPath,
+    cwd: downloadPacakgeResult.dirPath,
     stdio: 'inherit'
   })
 
@@ -62,7 +68,7 @@ async function republishPackage(identifier, target, { publishArgs = [], registry
     const subProcess = exec(
       `npm publish --ddd --ignore-scripts ${publishArgs.join(' ')}`,
       {
-        cwd: dirPath,
+        cwd: downloadPacakgeResult.dirPath,
         maxBuffer: TEN_MEGABYTES,
       },
       async (error, stdout, stderr) => {
@@ -90,10 +96,10 @@ async function republishPackage(identifier, target, { publishArgs = [], registry
 
     subProcess.stderr.pipe(process.stderr)
     subProcess.stdout.pipe(process.stdout)
-  }).then(cleanUp).then(() => {
+  }).then(downloadPacakgeResult.cleanUp).then(() => {
     if (shouldUnpublish) {
       try {
-        return unpublishPackage(registry.to, originPackageName, originPackageVersion);
+        return unpublishPackage(registry.to, identifier);
       } catch (e) {
         console.error("Can't unpublish a package: ", e);
       }

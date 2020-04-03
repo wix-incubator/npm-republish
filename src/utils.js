@@ -4,15 +4,14 @@ const path = require('path')
 const fs = require('fs-extra')
 const { extract } = require('tar')
 
-async function downloadPackage({ registry, packageName, packageVersion }) {
+async function downloadPackage({ registry, packageIdentifier, url }) {
   const downloadDirPath = tempy.directory()
 
-  const npmPackParams = `pack ${packageName}@${packageVersion} ${registry ? `--registry=${registry}` : ''}`
-  await execa('npm', npmPackParams.split(' '), {
+  const npmPackTarget = url || packageIdentifier;
+  const npmPackParams = `pack ${npmPackTarget} ${registry ? `--registry=${registry}` : ''}`
+  const { stdout: tgzFileName } = await execa('npm', npmPackParams.split(' ').filter(Boolean), {
     cwd: downloadDirPath,
   })
-
-  const tgzFileName = `${packageName.replace('@', '').replace('/', '-')}-${packageVersion}.tgz`
   const tgzPath = path.join(downloadDirPath, tgzFileName)
   await extract({ file: tgzPath, cwd: downloadDirPath })
 
@@ -40,8 +39,8 @@ async function getPackageVersionInfo(registry, packageName, version) {
   )
 }
 
-async function unpublishPackage(registry, packageName, version) {
-  const npmPackParams = `unpublish --registry=${registry} ${packageName}@${version}`;
+async function unpublishPackage(registry, packageIdentifier) {
+  const npmPackParams = `unpublish --registry=${registry} ${packageIdentifier}`;
   return execa('npm', npmPackParams.split(' '));
 }
 
@@ -75,6 +74,16 @@ function destructPackageNameWithVersion(packageNameWithVersion) {
   }
 }
 
+function isURL(url) {
+  try {
+    new (require('url').URL)(url)
+    return true
+  }
+  catch (e) {
+    return false;
+  }
+}
+
 module.exports = {
   destructPackageNameWithVersion,
   downloadPackage,
@@ -82,4 +91,5 @@ module.exports = {
   unpublishPackage,
   stringHasForbiddenCantPublishBecauseVersionExists,
   getPackageVersionInfo,
+  isURL,
 }
