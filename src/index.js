@@ -51,8 +51,7 @@ async function republishPackage(identifier, target, { publishArgs = [], registry
   }
   packageJson.version = targetPackageVersion
   if (registry) {
-    packageJson.publishConfig = packageJson.publishConfig || {}
-    packageJson.publishConfig.registry = registry.to
+    packageJson.publishConfig = { registry: registry.to }
   }
   packageJson.uniqePublishIdentifier = uniqueString()
   console.log('Unique identifier for this publish', packageJson.uniqePublishIdentifier)
