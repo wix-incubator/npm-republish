@@ -19,7 +19,7 @@ const execa = require('execa')
  * @param {string} target The version to re-publish to
  * @param {{registry: string|{from:string, to:string}, publishArgs: string[], shouldUnpublish: boolean}|string[]} publishArgs Publishing coonfiguration.
  */
-async function republishPackage(identifier, target, { publishArgs = [], registry, shouldUnpublish, packageJsonMutator = x => x } = {}) {
+async function republishPackage(identifier, target, { publishArgs = [], registry, shouldUnpublish = false, packageJsonMutator = x => x } = {}) {
   if (typeof registry === 'string') {
     registry = {
       from: registry,
