@@ -19,7 +19,7 @@ const execa = require('execa')
  * @param {string} target The version to re-publish to
  * @param {{registry: string|{from:string, to:string}, publishArgs: string[], shouldUnpublish: boolean}|string[]} publishArgs Publishing coonfiguration.
  */
-async function republishPackage(identifier, target, { publishArgs = [], registry, shouldUnpublish } = {}) {
+async function republishPackage(identifier, target, { publishArgs = [], registry, shouldUnpublish, packageJsonMutator = x => x } = {}) {
   if (typeof registry === 'string') {
     registry = {
       from: registry,
@@ -45,7 +45,8 @@ async function republishPackage(identifier, target, { publishArgs = [], registry
     })
   }
 
-  const packageJson = JSON.parse(readFileSync(join(downloadPacakgeResult.dirPath, 'package.json'), 'utf8'))
+  const packageJsonContent = readFileSync(join(downloadPacakgeResult.dirPath, 'package.json'), 'utf8')
+  const packageJson = packageJsonMutator(JSON.parse(packageJsonContent))
   if (targetPackageName) {
     packageJson.name = targetPackageName
   }

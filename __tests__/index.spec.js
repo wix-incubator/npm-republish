@@ -1,4 +1,5 @@
 const execa = require('execa')
+const fs = require('fs')
 const { republishPackage } = require('../src')
 const {downloadPackage} = require('../src/utils')
 const { setup, publishCheckPackage, calculateMd5, registry } = require('./test-utils')
@@ -188,7 +189,7 @@ test('should republish an existing package and run prerepublish', async () => {
   expect(packageDef['dist-tags']['my-tag']).toEqual('1.1.0')
 
   const { dirPath, cleanUp } = await downloadPackage({ packageIdentifier: `${originPackageName}@1.1.0`, registry })
-  expect(() => require('fs').statSync(require('path').join(dirPath, 'myFile.txt'))).not.toThrow()
+  expect(() => fs.statSync(require('path').join(dirPath, 'myFile.txt'))).not.toThrow()
 
   await cleanUp();
 })
@@ -347,4 +348,30 @@ test('should unpublish previous version after republishing with `shouldUnpublish
 
   expect(JSON.parse(packageDef.toString())).toContain(targetPackageVersion)
   expect(JSON.parse(packageDef.toString())).not.toContain(originPackageVersion)
+})
+
+test('should allow mutating the package.json of a republished package', async () => {
+  const expectedAuthor = "John Smith"
+  const originPackageName = 'check-package'
+  const originPackageVersion = '1.0.0'
+  await publishCheckPackage({
+    name: originPackageName,
+    version: originPackageVersion,
+  })
+
+  await republishPackage(
+    `${originPackageName}@${originPackageVersion}`,
+    'check-package@1.1.0',
+    {
+      registry,
+      packageJsonMutator: packageJson => {
+        packageJson.author = expectedAuthor
+        return packageJson
+      }
+    },
+  )
+
+  const { dirPath } = await downloadPackage({ packageIdentifier: `${originPackageName}@1.1.0`, registry })
+  const packageJson = JSON.parse(fs.readFileSync(`${dirPath}/package.json`, {encoding: 'utf8'}))
+  expect(packageJson.author).toEqual(expectedAuthor)
 })
