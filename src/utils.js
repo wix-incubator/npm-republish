@@ -3,23 +3,36 @@ const execa = require('execa')
 const path = require('path')
 const fs = require('fs-extra')
 const { extract } = require('tar')
+const pack = require('libnpmpack')
+const { Readable } = require('stream');
+
+function bufferToStream(binary) {
+  const readableInstanceStream = new Readable({
+    read() {
+      this.push(binary);
+      this.push(null);
+    }
+  });
+  return readableInstanceStream;
+}
+
+function streamToPromise(stream) {
+  return new Promise((resolve, reject) => {
+    stream.on('finish', () => resolve())
+    stream.on('error', err => reject(err))
+  })
+}
 
 async function downloadPackage({ registry, packageIdentifier, url }) {
-  const downloadDirPath = tempy.directory()
-
+  const extractPath = tempy.directory()
   const npmPackTarget = url || packageIdentifier;
-  const npmPackParams = `pack ${npmPackTarget} ${registry ? `--registry=${registry}` : ''}`
-  const { stdout: tgzFileName } = await execa('npm', npmPackParams.split(' ').filter(Boolean), {
-    cwd: downloadDirPath,
-  })
-  const tgzPath = path.join(downloadDirPath, tgzFileName)
-  await extract({ file: tgzPath, cwd: downloadDirPath })
+  const tarball = await pack(npmPackTarget, { registry })
+  await streamToPromise(bufferToStream(tarball).pipe(extract({cwd: extractPath})))
 
   console.log('Finished downloading and extracting the origin package.')
-
   return {
-    dirPath: path.join(downloadDirPath, 'package'),
-    cleanUp: () => fs.remove(downloadDirPath),
+    dirPath: path.join(extractPath, 'package'),
+    cleanUp: () => fs.remove(extractPath),
   }
 }
 
