@@ -9,17 +9,24 @@ async function downloadPackage({ registry, packageIdentifier, url }) {
 
   const npmPackTarget = url || packageIdentifier;
   const npmPackParams = `pack ${npmPackTarget} ${registry ? `--registry=${registry}` : ''}`
-  const { stdout: tgzFileName } = await execa('npm', npmPackParams.split(' ').filter(Boolean), {
+  const result = await execa('npm', npmPackParams.split(' ').filter(Boolean), {
     cwd: downloadDirPath,
+    reject: false
   })
-  const tgzPath = path.join(downloadDirPath, tgzFileName)
-  await extract({ file: tgzPath, cwd: downloadDirPath })
 
-  console.log('Finished downloading and extracting the origin package.')
+  if (result instanceof Error) {
+    throw new Error(result.stderr)
+  } else {
+    const { stdout: tgzFileName } = result
+    const tgzPath = path.join(downloadDirPath, tgzFileName)
+    await extract({ file: tgzPath, cwd: downloadDirPath })
 
-  return {
-    dirPath: path.join(downloadDirPath, 'package'),
-    cleanUp: () => fs.remove(downloadDirPath),
+    console.log('Finished downloading and extracting the origin package.')
+
+    return {
+      dirPath: path.join(downloadDirPath, 'package'),
+      cleanUp: () => fs.remove(downloadDirPath),
+    }
   }
 }
 

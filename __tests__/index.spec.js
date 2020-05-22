@@ -375,3 +375,13 @@ test('should allow mutating the package.json of a republished package', async ()
   const packageJson = JSON.parse(fs.readFileSync(`${dirPath}/package.json`, {encoding: 'utf8'}))
   expect(packageJson.author).toEqual(expectedAuthor)
 })
+
+test('should fail on a `npm pack` error with an informative message', async () => {
+  const run = republishPackage(
+    'check-package@1.0.0',
+    'check-package@1.1.0',
+    { registry },
+  )
+
+  await expect(run).rejects.toThrow(`404 Not Found - GET ${registry}/check-package - no such package available`)
+})
