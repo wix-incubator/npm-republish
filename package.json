@@ -11,7 +11,7 @@
     "@ts-type/package-dts": "^1.0.8",
     "execa": "^3.4.0",
     "fs-extra": "^8.1.0",
-    "tar": "^4.4.8",
+    "tar": "^4.4.15",
     "tempy": "^0.3.0",
     "unique-string": "^2.0.0"
   },
